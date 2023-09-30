@@ -14,8 +14,8 @@ METADATA_GAMES=$TRANSF_DIR/"metadata_games"
 exec 4>&2
 exec 2>"$LOG"
 
-declare -i WIDTH=$[ COLUMNS * 3 ]
-declare -i HEIGHT=$[ LINES * 3 ]
+declare -i WIDTH=$[ COLUMNS * 10 ]
+declare -i HEIGHT=$[ LINES * 10 ]
 declare -A games_roms
 declare -A games_medias
 declare -A games_descriptions
@@ -27,7 +27,6 @@ haswkdir
 check_source
 generate_database $METADATA_GAMES
 select_result
-check_target
 move_files
 select_platform
 merge_metadata

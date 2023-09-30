@@ -45,19 +45,6 @@ function haswkdir()
 #验证SOURCE_DIR目录内的文件
 function check_source()
 {
-#是否有且仅有一个metadata.pegasus.txt文件
-	local metadata_file_count=`find $SOURCE_DIR -name metadata.pegasus.txt|wc -l`
-	if [ $metadata_file_count -lt 1 ]
-	then
-		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="Need the file named metadata.pegasus.txt. Put it in the $SOURCE_DIR. Then launch this script again."
-		exit 1
-	elif [ $metadata_file_count -gt 1 ]
-	then
-		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="More than one metadata.pegasus.txt. Delete the extra files. Then launch this script again."
-		exit 1
-	fi
-	local metadata_file=`find $SOURCE_DIR -name metadata.pegasus.txt`
-	split_metadata "$metadata_file"
 #是否有tkzlm后缀的文件
 #找到tkzlm后缀的文件并解压
 	local compress_files_count=`find $SOURCE_DIR -name *.tkzlm|wc -l`
@@ -67,8 +54,23 @@ function check_source()
 	else
 		echo "There's no compressed file.">&2
 	fi
+	check_target
+#是否有且仅有一个metadata.pegasus.txt文件
+	local metadata_file_count=`find $SOURCE_DIR -name metadata.pegasus.txt|wc -l`
+	if [ $metadata_file_count -lt 1 ]
+	then
+#由于没有提供metadata.pegasus.txt文件，这里将提供一个默认的metadata.pegasus.txt文件，在匹配的时候可能产生错误
+		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="Need the file named metadata.pegasus.txt. Put it in the $SOURCE_DIR. Then launch this script again."
+		exit 1
+	elif [ $metadata_file_count -gt 1 ]
+	then
+#由于metadata.pegasus.txt文件的数量多于1，这里将提供文件选择器用于删除多余的metadata.pegasus.txt文件
+		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="More than one metadata.pegasus.txt. Delete the extra files. Then launch this script again."
+		exit 1
+	fi
+	local metadata_file=`find $SOURCE_DIR -name metadata.pegasus.txt`
+	split_metadata "$metadata_file"
 }
-
 #参数：压缩文件
 #解压缩tkzlm后缀的压缩包,并删除
 function uncompress()
@@ -254,6 +256,7 @@ function check_target()
 	if [ $count_dir -ne 1 ]
 	then
 		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="无法同时处理多个不同种类游戏的rom，请检查压缩文件，并重新执行脚本.或者删除transf目录内不是你目标的子目录。"
+		exit 1
 	else
 		dir=`ls -d $TRANSF_DIR/*/`
 		ROMS_SUB_DIRNAME=${dir##*/transf/}

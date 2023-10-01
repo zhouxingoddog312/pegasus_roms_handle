@@ -19,6 +19,9 @@ sudo apt update
 sudo apt install sed unix2dos zenity p7zip-full
 ```
 ## Usage
+- 将下载好的rom包和对应的metadata.pegasus.txt文件放入source目录，如果没有该目录，则执行一次脚本会创建该目录。
+- rom包只能放入同一个类目，不能同时处理多个类目
+- 处理完成后，对应的rom目录将出现在target目录下
 ## Schedule
 - [ ] 基本功能
 ## Contact

@@ -45,10 +45,15 @@ function haswkdir()
 #验证SOURCE_DIR目录内的文件
 function check_source()
 {
+	local compressed_files_count
+	local metadata_file
+	local metadata_file_count
+	local -a metadata_file_array
+	local OLDIFS=$IFS
 #是否有tkzlm后缀的文件
 #找到tkzlm后缀的文件并解压
-	local compress_files_count=`find $SOURCE_DIR -name *.tkzlm|wc -l`
-	if [ $compress_files_count -gt 0 ]
+	compressed_files_count=`find $SOURCE_DIR -name *.tkzlm|wc -l`
+	if [ $compressed_files_count -gt 0 ]
 	then
 		uncompress
 	else
@@ -56,19 +61,39 @@ function check_source()
 	fi
 	check_target
 #是否有且仅有一个metadata.pegasus.txt文件
-	local metadata_file_count=`find $SOURCE_DIR -name metadata.pegasus.txt|wc -l`
-	if [ $metadata_file_count -lt 1 ]
-	then
+	metadata_file_count=`find $SOURCE_DIR -name metadata.pegasus.txt|wc -l`
+	while [ $metadata_file_count -ne 1 ]
+	do
+		if [ $metadata_file_count -lt 1 ]
+		then
 #由于没有提供metadata.pegasus.txt文件，这里将提供一个默认的metadata.pegasus.txt文件，在匹配的时候可能产生错误
-		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="Need the file named metadata.pegasus.txt. Put it in the $SOURCE_DIR. Then launch this script again."
-		exit 1
-	elif [ $metadata_file_count -gt 1 ]
-	then
+			zenity --info --width=$WIDTH --height=$HEIGHT --title="缺少metadata.pegasus.txt文件" --text="由于没有提供metadata.pegasus.txt文件，这里将提供一个默认的metadata.pegasus.txt文件，在匹配的时候可能产生错误"
+			cp "$METADATA_DIR/android/$ROMS_SUB_DIRNAME/metadata.pegasus.txt" "$SOURCE_DIR"
+#			zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="Need the file named metadata.pegasus.txt. Put it in the $SOURCE_DIR. Then launch this script again."
+#			exit 1
+		elif [ $metadata_file_count -gt 1 ]
+		then
 #由于metadata.pegasus.txt文件的数量多于1，这里将提供文件选择器用于删除多余的metadata.pegasus.txt文件
-		zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="More than one metadata.pegasus.txt. Delete the extra files. Then launch this script again."
-		exit 1
-	fi
-	local metadata_file=`find $SOURCE_DIR -name metadata.pegasus.txt`
+			zenity --info --width=$WIDTH --height=$HEIGHT --title="多余的metadata.pegasus.txt文件" --text="由于有多余的metadata.pegasus.txt文件，请选择你要删除的metadata.pegasus.txt文件"
+			metadata_file=$(zenity --file-selection --width=$WIDTH --height=$HEIGHT --filename="source/*" --multiple --file-filter="metadata.pegasus.txt")
+			if [ $? -ne 0 ]
+			then
+				continue
+			else
+				IFS='|'
+				read -ra metadata_file_array <<<"$metadata_file"
+				IFS=$OLDIFS
+				for metadata_file in "${metadata_file_array[@]}"
+				do
+					rm -f "$metadata_file"
+				done
+			fi
+#			zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="More than one metadata.pegasus.txt. Delete the extra files. Then launch this script again."
+#			exit 1
+		fi
+		metadata_file_count=`find $SOURCE_DIR -name metadata.pegasus.txt|wc -l`
+	done
+	metadata_file=`find $SOURCE_DIR -name metadata.pegasus.txt`
 	split_metadata "$metadata_file"
 }
 #参数：压缩文件
@@ -247,6 +272,7 @@ function select_result()
 	local OLDIFS=$IFS
 	IFS='|'
 	read -ra games_selected <<<"$tmp_str"
+	IFS=$OLDIFS
 }
 #解压缩完成后，transf目录内应该只有一个roms目录，如果有多余的roms目录，那么可能是tkzlm后缀的压缩文件不只一个游戏种类，这种情况无法处理
 function check_target()
@@ -260,6 +286,7 @@ function check_target()
 	else
 		dir=`ls -d $TRANSF_DIR/*/`
 		ROMS_SUB_DIRNAME=${dir##*/transf/}
+		ROMS_SUB_DIRNAME=${ROMS_SUB_DIRNAME%/*}
 		mkdir -p $TARGET_DIR/"$ROMS_SUB_DIRNAME"/media/
 	fi
 }
@@ -316,11 +343,11 @@ function select_platform()
 	local platform=$(zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="选择你所使用的游戏平台，以生成对应的metadata.pegasus.txt文件" --list --radiolist --column="选择" --column="游戏平台" true android false PC)
 	local metadata_file=$METADATA_DIR"/$platform/$ROMS_SUB_DIRNAME/metadata.pegasus.txt"
 	local new_metadata_file="$TRANSF_DIR/metadata.pegasus.txt"
-	touch $new_metadata_file
-	dos2unix -n $metadata_file $new_metadata_file
+	touch "$new_metadata_file"
+	dos2unix -n "$metadata_file" "$new_metadata_file"
 	sed -n -e '/launch:/,$d;w '"$METADATA_TITLE"'' "$new_metadata_file"
 	sed  -n -e '/game:/,$d;/^[[:space:]]*$/d;/launch:/,$w '"$METADATA_LAUNCH"'' "$new_metadata_file"
-	rm -rf $new_metadata_file
+	rm -rf "$new_metadata_file"
 }
 #合并metadata.pegasus.txt文件
 function merge_metadata()

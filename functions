@@ -367,7 +367,7 @@ function select_interface()
 		value="${games_descriptions[$key]}"
 		tmp_str=$tmp_str"TRUE ""\"$key\""" ""\"$value\""" "
 	done
-	eval zenity --width=$WIDTH --height=$HEIGHT --title="游戏选择" --text="选择你需要的游戏" --list --checklist --column="选择" --column="游戏名" --column="描述" $tmp_str
+	eval zenity --width=\$WIDTH --height=\$HEIGHT --title="游戏选择" --text="选择你需要的游戏" --list --checklist --column="选择" --column="游戏名" --column="描述" $tmp_str
 }
 #获取数组games_selected
 function select_result()

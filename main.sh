@@ -15,8 +15,8 @@ METADATA_LAUNCH=$TRANSF_DIR/"metadata_launch"
 METADATA_GAMES=$TRANSF_DIR/"metadata_games"
 exec 4>&2
 exec 2>"$LOG"
-declare -i WIDTH=$[ COLUMNS * 2 ]
-declare -i HEIGHT=$[ LINES * 2 ]
+declare -i WIDTH=800
+declare -i HEIGHT=600
 declare -A games_roms
 declare -A games_medias
 declare -A games_descriptions

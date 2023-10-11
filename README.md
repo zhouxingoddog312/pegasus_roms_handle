@@ -2,6 +2,7 @@
 ## Introduction
 &emsp;这是一个简单的脚本，仅针对于跳坑者联盟所发布的天马G的通用rom包进行裁剪
 **通用rom包**指的是： 
+ 
 ![跳坑者联盟 PegasusG v1.2 完整版](src/pic/1.png "跳坑者联盟 PegasusG v1.2 完整版") 
 
 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;:arrow_down: 
@@ -12,7 +13,7 @@
  
 ![【安卓+PC】通用rom--2358GB](src/pic/3.png "【安卓+PC】通用rom--2358GB") 
 ## Requirements
-&emsp;此脚本仅在Ubuntu 22.04.3 LTS上进行过测试，其它系统及版本需要自行测试。此脚本需要依赖sed,7z,unix2dos,zenity等工具。
+&emsp;此脚本仅在Ubuntu 22.04.3 LTS上进行过测试，其它系统及版本需要自行测试。此脚本需要依赖sed,7z,dos2unix,zenity等工具。
 - sed工具，处理metadata.pegasus.txt文件
 - 7z工具，处理tkzlm后缀的压缩文件
 - dos2unix工具，在window类型的换行符和linux类型的换行符之间转换
@@ -27,6 +28,9 @@
 - rom包只能放入同一个类目，不能同时处理多个类目
 - 处理完成后，对应的rom目录将出现在target目录下
 ## Schedule
-- [ ] 基本功能
+- [ ] 裁剪目标rom包
+- [ ] 添加自选的rom文件
+- [ ] 构造自制rom包
 ## Contact
+<1820034020@qq.com>
 ## Author

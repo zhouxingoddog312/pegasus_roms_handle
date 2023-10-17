@@ -14,6 +14,7 @@
 ![【安卓+PC】通用rom--2358GB](src/pic/3.png "【安卓+PC】通用rom--2358GB") 
 ## Requirements
 &emsp;此脚本仅在Ubuntu 22.04.3 LTS上进行过测试，其它系统及版本需要自行测试。此脚本需要依赖sed,7z,dos2unix,zenity等工具。
+&emsp;
 - sed工具，处理metadata.pegasus.txt文件
 - 7z工具，处理tkzlm后缀的压缩文件
 - dos2unix工具，在window类型的换行符和linux类型的换行符之间转换
@@ -27,8 +28,9 @@
 - 将下载好的rom包和对应的metadata.pegasus.txt文件放入source目录，如果没有该目录，则执行一次脚本会创建该目录。
 - rom包只能放入同一个类目，不能同时处理多个类目
 - 处理完成后，对应的rom目录将出现在target目录下
+- 如果是通过桌面图标启动，那么默认的工作目录是当前账号的家目录
 ## Schedule
-- [ ] 裁剪目标rom包
+- [X] 裁剪目标rom包
 - [ ] 添加自选的rom文件
 - [ ] 构造自制rom包
 ## Contact

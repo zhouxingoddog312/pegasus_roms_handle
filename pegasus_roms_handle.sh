@@ -27,6 +27,11 @@ declare -a games_selected
 source "$LIB_PATH"
 ############
 
+###简介
+version
+help
+#############
+
 #############安装依赖
 install_sed
 install_dos2unix
@@ -34,8 +39,6 @@ install_7z
 install_zenity
 ##############
 
-version
-help
 haswkdir
 check_source
 generate_database $METADATA_GAMES
@@ -43,6 +46,6 @@ select_result
 move_files
 select_platform
 merge_metadata
-clearup 1
+clearup 3
 
 exec 2>&4

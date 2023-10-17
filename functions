@@ -13,9 +13,10 @@ function version()
 {
 	cat <<EOF
 ---------------------------------------------------------------------------------------------
-Name: 
+Name: pegasus_roms_handle
 Version: 1.00
 Author: goddog312
+contact:1820034020@qq.com
 ---------------------------------------------------------------------------------------------
 EOF
 }
@@ -486,6 +487,8 @@ function merge_metadata()
 #0	删除脚本自身以外的所有文件及目录
 #1	删除target目录、logfile、及脚本自身以外的所有文件
 #2	删除source目录、logfile、及脚本自身以外的所有文件，恢复到未处理前的状态，方便查看logfile并再次进行处理
+#3	删除source目录、target目录、logfile、及脚本自身以外的所有文件
+
 function clearup()
 {
 	case $1 in
@@ -495,11 +498,15 @@ function clearup()
 		;;
 	1)
 		rm -rf $SOURCE_DIR $TRANSF_DIR
-		zenity --notification  --text="处理已完成，目标文件在\n$TARGET_DIR目录内"
+		zenity --notification  --text="处理已完成,删除源文件，目标文件在\n$TARGET_DIR目录内"
 		;;
 	2)
 		rm -rf $TRANSF_DIR $TARGET_DIR
 		zenity --notification  --text="处理未完成，已恢复初始状态，请重新处理"
+		;;
+	3)
+		rm -rf $TRANSF_DIR
+		zenity --notification  --text="处理已完成，保留源文件,目标文件在\n$TARGET_DIR目录内"
 		;;
 	esac
 }

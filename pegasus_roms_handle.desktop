@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=pegasus_roms_handle
+Exec=/home/goddog312/workspace/gitee/pegasus_roms_handle/pegasus_roms_handle.sh
+Icon=default
+Terminal=true
+Type=Application
+StartupNotify=false

@@ -242,6 +242,9 @@ function generate_database()
 {
 	exec 3<&0
 	exec 0<"$1"
+#用作打印进度
+#	local -i total_lines=$(cat "$1"|wc -l)
+#	local -i index=1
 	local key=""
 	local value=""
 	local tmp_string
@@ -251,6 +254,10 @@ function generate_database()
 	shopt -s globstar
 	while read -r line
 	do
+#显示处理进度条
+#		echo $index
+#		((index++))
+#		sleep 1
 #跳过空白行
 		if [[ "$line" =~ ^[[:space:]]*$ ]]
 		then
@@ -348,6 +355,7 @@ function generate_database()
 			fi
 		fi
 	done
+#|zenity --progress --width=$WIDTH --height=$HEIGHT --title="数据生成中" --text="正在读取游戏数据文件" --percentage=0
 #######################
 #测试
 #	declare -p games_roms

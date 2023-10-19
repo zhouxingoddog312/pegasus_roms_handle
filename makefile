@@ -2,6 +2,7 @@
 install:
 
 uninstall:
+
 initial_1:clean
 	-mkdir source
 	cp -r ~/workspace/download/"【15】PC-FX--26G/" ./source

@@ -243,33 +243,33 @@ function generate_database()
 	exec 3<&0
 	exec 0<"$1"
 #用作打印进度
-#	local -i total_lines=$(cat "$1"|wc -l)
-#	local -i index=1
-	local key=""
-	local value=""
+	local -i total_lines=$(cat "$1"|wc -l)
+	local -i index=1
+	local array_key=""
+	local array_value=""
 	local tmp_string
 	local -i serial_number=0
 	local OLDIFS=$IFS
 	IFS=
 	shopt -s globstar
+	coproc zenity --progress --width=$WIDTH --height=$HEIGHT --title="数据生成中" --text="正在读取游戏数据文件" --percentage=0 --no-cancel --auto-close
 	while read -r line
 	do
 #显示处理进度条
-#		echo $index
-#		((index++))
-#		sleep 1
+		echo $((index*100/total_lines))
+		((index++))
 #跳过空白行
 		if [[ "$line" =~ ^[[:space:]]*$ ]]
 		then
 			continue
 		elif [[ "$line" =~ ^game: ]]
 		then
-			key=${line#game: }
-			value="array"$serial_number
+			array_key=${line#game: }
+			array_value="array"$serial_number
 #在函数内定义的数组，必须定义成全局变量
-			eval declare -ag "$value"
+			eval declare -ag "$array_value"
 			let serial_number++
-			games_roms["$key"]="$value"
+			games_roms["$array_key"]="$array_value"
 		elif [[ "$line" =~ ^file: ]]
 		then
 			line=${line#file: }
@@ -277,7 +277,7 @@ function generate_database()
 			if [ -e $TRANSF_DIR/**/"$line" ]
 			then
 				tmp_string=`ls $TRANSF_DIR/**/"$line"`
-				eval $value[\${#$value[@]}]="\$tmp_string"
+				eval $array_value[\${#$array_value[@]}]="\$tmp_string"
 			else
 				echo "file: $line can't be find.">&2
 			fi
@@ -287,7 +287,7 @@ function generate_database()
 			if [ -d $TRANSF_DIR/**/media/"$line" ]
 			then
 				tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
-				games_medias["$key"]="$tmp_string"
+				games_medias["$array_key"]="$tmp_string"
 			else
 				echo "derectory: /media/$line can't be find.">&2
 			fi
@@ -303,7 +303,7 @@ function generate_database()
 				if [ -e $TRANSF_DIR/**/"$line" ]
 				then
 					tmp_string=`ls $TRANSF_DIR/**/"$line"`
-					eval $value[\${#$value[@]}]="\$tmp_string"
+					eval $array_value[\${#$array_value[@]}]="\$tmp_string"
 				else
 					echo "file: $line can't be find.">&2
 				fi
@@ -314,12 +314,12 @@ function generate_database()
 				if [ -d $TRANSF_DIR/**/media/"$line" ]
 				then
 					tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
-					games_medias["$key"]="$tmp_string"
+					games_medias["$array_key"]="$tmp_string"
 				else
 					echo "derectory: /media/$line can't be find.">&2
 				fi
 			fi
-#非空白行，有前导空白的，属于上一个key的值
+#非空白行，有前导空白的，属于上一个array_key的值
 		elif [ "${line:0:1}" == " " ]
 		then
 			IFS=$OLDIFS
@@ -328,7 +328,7 @@ function generate_database()
 			if [ -e $TRANSF_DIR/**/"$line" ]
 			then
 				tmp_string=`ls $TRANSF_DIR/**/"$line"`
-				eval $value[\${#$value[@]}]="\$tmp_string"
+				eval $array_value[\${#$array_value[@]}]="\$tmp_string"
 			else
 				echo "file: $line can't be find.">&2
 			fi
@@ -339,7 +339,7 @@ function generate_database()
 			if [ -d $TRANSF_DIR/**/media/"$line" ]
 			then
 				tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
-				games_medias["$key"]="$tmp_string"
+				games_medias["$array_key"]="$tmp_string"
 			else
 				echo "derectory: /media/$line can't be find.">&2
 			fi
@@ -348,14 +348,13 @@ function generate_database()
 #games_descriptions
 			line=${line#description: }
 #核对对应的rom地址是否存在，只有rom地址存在才添加描述
-			eval tmp_string="\${#${games_roms["$key"]}[@]}"
+			eval tmp_string="\${#${games_roms["$array_key"]}[@]}"
 			if [ $tmp_string -ge 1 ]
 			then
-				games_descriptions["$key"]="$line"
+				games_descriptions["$array_key"]="$line"
 			fi
 		fi
-	done
-#|zenity --progress --width=$WIDTH --height=$HEIGHT --title="数据生成中" --text="正在读取游戏数据文件" --percentage=0
+	done>& ${COPROC[1]}
 #######################
 #测试
 #	declare -p games_roms
@@ -368,6 +367,7 @@ function generate_database()
 	shopt -u globstar
 	IFS=$OLDIFS
 	exec 0<&3
+	wait $COPROC_PID
 }
 #显示游戏的选择框，返回所选择的游戏
 #返回所选游戏名的字符串，每个游戏名由'|'分割
@@ -475,6 +475,9 @@ function select_platform()
 		sed -n -e '/launch:/,$d;w '"$METADATA_TITLE"'' "$new_metadata_file"
 		sed  -n -e '/game:/,$d;/^[[:space:]]*$/d;/launch:/,$w '"$METADATA_LAUNCH"'' "$new_metadata_file"
 		rm -rf "$new_metadata_file"
+		zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="导入$platform平台metadata.pegasus.txt文件" --info --timeout=2
+	else
+		zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="保留原始metadata.pegasus.txt文件" --info --timeout=2
 	fi
 }
 #合并metadata.pegasus.txt文件

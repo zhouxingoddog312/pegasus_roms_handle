@@ -172,8 +172,8 @@ function check_source()
 		if [ $metadata_file_count -lt 1 ]
 		then
 #由于没有提供metadata.pegasus.txt文件，这里将提供一个默认的metadata.pegasus.txt文件，在匹配的时候可能产生错误
-			zenity --info --width=$WIDTH --height=$HEIGHT --title="缺少metadata.pegasus.txt文件" --text="由于没有提供metadata.pegasus.txt文件，这里将提供一个默认的metadata.pegasus.txt文件，在匹配的时候可能产生错误"
-			cp "$METADATA_DIR/android/$ROMS_SUB_DIRNAME/metadata.pegasus.txt" "$SOURCE_DIR"
+			zenity --info --width=$WIDTH --height=$HEIGHT --title="缺少metadata.pegasus.txt文件" --text="由于没有提供metadata.pegasus.txt文件，这里将提供一个默认的metadata.pegasus.txt文件(默认PC平台)，在匹配的时候可能产生错误"
+			cp "$METADATA_DIR/PC/$ROMS_SUB_DIRNAME/metadata.pegasus.txt" "$SOURCE_DIR"
 #			zenity --error --width=$WIDTH --height=$HEIGHT --title="错误" --text="Need the file named metadata.pegasus.txt. Put it in the $SOURCE_DIR. Then launch this script again."
 #			exit 1
 		elif [ $metadata_file_count -gt 1 ]
@@ -390,7 +390,7 @@ function select_result()
 	if [ -z "$tmp_str" ]
 	then
 		zenity --width=$WIDTH --height=$HEIGHT --info --title="未选择" --text="你并未选择任何rom,将清理中间文件并退出脚本" --timeout=10
-		clearup 2
+		clearup
 		exit 0
 	else
 		local OLDIFS=$IFS
@@ -465,20 +465,31 @@ function move_files()
 #这里将从metadata目录中提取对应的metadata.pegasus.txt文件的title和launch部分
 function select_platform()
 {
-	local platform=$(zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="选择你所使用的游戏平台，以生成对应的metadata.pegasus.txt文件,\n取消选择则使用你放入$SOURCE_DIR目录内的metadata.pegusus.txt文件所指平台" --list --radiolist --column="选择" --column="游戏平台" true android false PC)
-	if [ -n "$platform" ]
-	then
-		local metadata_file=$METADATA_DIR"/$platform/$ROMS_SUB_DIRNAME/metadata.pegasus.txt"
-		local new_metadata_file="$TRANSF_DIR/metadata.pegasus.txt"
-		touch "$new_metadata_file"
-		dos2unix -n "$metadata_file" "$new_metadata_file"
-		sed -n -e '/launch:/,$d;w '"$METADATA_TITLE"'' "$new_metadata_file"
-		sed  -n -e '/game:/,$d;/^[[:space:]]*$/d;/launch:/,$w '"$METADATA_LAUNCH"'' "$new_metadata_file"
-		rm -rf "$new_metadata_file"
-		zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="导入$platform平台metadata.pegasus.txt文件" --info --timeout=2
-	else
-		zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="保留原始metadata.pegasus.txt文件" --info --timeout=2
-	fi
+	while true
+	do
+		local platform=$(zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="选择你所使用的游戏平台，以生成对应的metadata.pegasus.txt文件,\n取消选择则使用你放入$SOURCE_DIR目录内的metadata.pegusus.txt文件所指平台" --list --radiolist --column="选择" --column="游戏平台" true android false PC)
+		if [ -n "$platform" ]
+		then
+			local metadata_file=$METADATA_DIR"/$platform/$ROMS_SUB_DIRNAME/metadata.pegasus.txt"
+			if [ -f "$metadata_file" ]
+			then
+				local new_metadata_file="$TRANSF_DIR/metadata.pegasus.txt"
+				touch "$new_metadata_file"
+				dos2unix -n "$metadata_file" "$new_metadata_file"
+				sed -n -e '/launch:/,$d;w '"$METADATA_TITLE"'' "$new_metadata_file"
+				sed  -n -e '/game:/,$d;/^[[:space:]]*$/d;/launch:/,$w '"$METADATA_LAUNCH"'' "$new_metadata_file"
+				rm -rf "$new_metadata_file"
+				zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="导入$platform平台metadata.pegasus.txt文件" --info --timeout=2
+				break
+			else
+				zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="$platform平台$metadata_file文件不存在,请重新选择" --info --timeout=2
+				continue
+			fi
+		else
+			zenity --width=$WIDTH --height=$HEIGHT --title="游戏平台选择" --text="保留原始metadata.pegasus.txt文件" --info --timeout=2
+			break
+		fi
+	done
 }
 #合并metadata.pegasus.txt文件
 function merge_metadata()
@@ -496,13 +507,14 @@ function merge_metadata()
 }
 #完成后做最后的清理工作
 #0	删除脚本自身以外的所有文件及目录
-#1	删除target目录、logfile、及脚本自身以外的所有文件
-#2	删除source目录、logfile、及脚本自身以外的所有文件，恢复到未处理前的状态，方便查看logfile并再次进行处理
-#3	删除source目录、target目录、logfile、及脚本自身以外的所有文件
-
+#1	删除除target目录、logfile、及脚本自身以外的所有文件
+#2	删除除source目录、logfile、及脚本自身以外的所有文件，恢复到未处理前的状态，方便查看logfile并再次进行处理
+#3	删除除source目录、target目录、logfile、及脚本自身以外的所有文件
+#4	保留所有中间文件，方便debug
 function clearup()
 {
-	case $1 in
+	local select=$(zenity --width=$WIDTH --height=$HEIGHT --title="选择文件清理等级" --text="0	删除脚本自身以外的所有文件及目录\n1	删除除target目录、logfile、及脚本自身以外的所有文件\n2	删除除source目录、logfile、及脚本自身以外的所有文件，恢复到未处理前的状态，方便查看logfile并再次进行处理\n3	删除除source目录、target目录、logfile、及脚本自身以外的所有文件\n4	保留所有中间文件，方便debug\n" --list --radiolist --column="选择" --column="清理等级" true 0 false 1 false 2 false 3 false 4)
+	case "$select" in
 	0)
 		rm -rf $SOURCE_DIR $TRANSF_DIR $TARGET_DIR $LOG
 		zenity --notification  --text="处理未完成，已清理所有文件"
@@ -518,6 +530,9 @@ function clearup()
 	3)
 		rm -rf $TRANSF_DIR
 		zenity --notification  --text="处理已完成，保留源文件,目标文件在\n$TARGET_DIR目录内"
+		;;
+	4)
+		zenity --notification  --text="保留源文件，过程文件及目标文件"
 		;;
 	esac
 }

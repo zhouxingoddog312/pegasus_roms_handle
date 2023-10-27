@@ -46,6 +46,6 @@ select_result
 move_files
 select_platform
 merge_metadata
-clearup 3
+clearup
 
 exec 2>&4

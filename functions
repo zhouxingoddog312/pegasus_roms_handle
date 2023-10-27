@@ -289,7 +289,7 @@ function generate_database()
 				tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
 				games_medias["$array_key"]="$tmp_string"
 			else
-				echo "derectory: /media/$line can't be find.">&2
+				echo "由file字段推断出的derectory: /media/$line can't be find.">&2
 			fi
 		elif [[ "$line" =~ ^files: ]]
 		then
@@ -316,7 +316,7 @@ function generate_database()
 					tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
 					games_medias["$array_key"]="$tmp_string"
 				else
-					echo "derectory: /media/$line can't be find.">&2
+					echo "由files字段推断出的derectory: /media/$line can't be find.">&2
 				fi
 			fi
 #非空白行，有前导空白的，属于上一个array_key的值
@@ -341,7 +341,7 @@ function generate_database()
 				tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
 				games_medias["$array_key"]="$tmp_string"
 			else
-				echo "derectory: /media/$line can't be find.">&2
+				echo "由前导空白字段推断出的derectory: /media/$line can't be find.">&2
 			fi
 		elif [[ "$line" =~ ^description: ]]
 		then
@@ -352,6 +352,18 @@ function generate_database()
 			if [ $tmp_string -ge 1 ]
 			then
 				games_descriptions["$array_key"]="$line"
+			fi
+#games_medias	拥有assets.box_front	assets.logo	assets.video等字段的条目，将用此处推断出的目录覆盖前面推断出的media目录
+		elif [[ "$line" =~ ^assets\..*: ]]
+		then
+			line=${line#*media/}
+			line=${line%/*}
+			if [ -d $TRANSF_DIR/**/media/"$line" ]
+			then
+				tmp_string=`ls -d $TRANSF_DIR/**/media/"$line"`
+				games_medias["$array_key"]="$tmp_string"
+			else
+				echo "由assets字段推断出的derectory: /media/$line can't be find.">&2
 			fi
 		fi
 	done>& ${COPROC[1]}
@@ -513,7 +525,7 @@ function merge_metadata()
 #4	保留所有中间文件，方便debug
 function clearup()
 {
-	local select=$(zenity --width=$WIDTH --height=$HEIGHT --title="选择文件清理等级" --text="0	删除脚本自身以外的所有文件及目录\n1	删除除target目录、logfile、及脚本自身以外的所有文件\n2	删除除source目录、logfile、及脚本自身以外的所有文件，恢复到未处理前的状态，方便查看logfile并再次进行处理\n3	删除除source目录、target目录、logfile、及脚本自身以外的所有文件\n4	保留所有中间文件，方便debug\n" --list --radiolist --column="选择" --column="清理等级" true 0 false 1 false 2 false 3 false 4)
+	local select=$(zenity --width=$WIDTH --height=$HEIGHT --title="选择文件清理等级" --text="0	删除脚本自身以外的所有文件及目录\n1	删除除target目录、logfile、及脚本自身以外的所有文件\n2	删除除source目录、logfile、及脚本自身以外的所有文件，恢复到未处理前的状态，方便查看logfile并再次进行处理\n3	删除除source目录、target目录、logfile、及脚本自身以外的所有文件\n4	保留所有中间文件，方便debug\n" --list --radiolist --column="选择" --column="清理等级" false 0 false 1 false 2 false 3 true 4)
 	case "$select" in
 	0)
 		rm -rf $SOURCE_DIR $TRANSF_DIR $TARGET_DIR $LOG
